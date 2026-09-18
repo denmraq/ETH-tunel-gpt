@@ -1,5 +1,4 @@
-# ETH Adaptive Tunnel — GitHub Pages
+# ETH Adaptive Probability Tunnel
+Static GitHub Pages build. No Python/backend.
 
-Static app. No Python, FastAPI, VPS or build step. Upload the files from this ZIP to the root of a GitHub repository and enable **Settings → Pages → Deploy from a branch → main / root**.
-
-Engine: existing ETH radar state for LONG/SHORT; BTC dominance is contextual; ETH/BTC + BTC describe capital rotation; OI/taker/funding describe continuation quality; realized ETH volatility sets P20/P80 width; mathematical trajectory produces P50 for 4h/12h/24h.
+Core: ETH Radar closed-data state + BTC.D / ETH-BTC / BTC capital regime + OI/taker/funding + mathematical multi-timescale trajectory. Forecast is anchored to the last CLOSED 15m ETH candle, so a one-second page refresh cannot shift all 4h/12h/24h targets with spot. P20/P50/P80 and horizon probabilities are calculated separately from one distribution.

@@ -1,83 +1,50 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071521"><title>ETH Tunnel</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-180.png"><script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script><style>
-:root{--bg:#07111b;--card:#0e1b28;--line:#1b3042;--text:#eef7ff;--muted:#8fa6b8;--green:#2ee59d;--red:#ff6675;--blue:#4db8ff;--cyan:#65e6ff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07111b,#091725);color:var(--text);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:920px;margin:auto;padding:18px}.head{display:flex;align-items:center;gap:12px;margin:4px 0 18px}.logo{width:48px;height:48px}.title{font-weight:900;font-size:22px}.sub{color:var(--muted);font-size:12px}.card{background:rgba(14,27,40,.96);border:1px solid var(--line);border-radius:24px;padding:20px;margin:12px 0;box-shadow:0 16px 40px #0004}.price{font-size:48px;font-weight:950}.signal{font-size:30px;font-weight:950;margin-top:7px}.long{color:var(--green)}.short{color:var(--red)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.h{padding:14px;border:1px solid var(--line);border-radius:18px;text-align:center}.hk{font-size:12px;color:var(--muted)}.hv{font-size:22px;font-weight:900;margin:5px 0}.prob{font-size:13px}.chart{height:430px}.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.fact{background:#0a1723;border-radius:16px;padding:13px}.fk{color:var(--muted);font-size:11px}.fv{font-weight:850;margin-top:4px}.rotation{font-size:17px;font-weight:850}.bar{height:8px;background:#152838;border-radius:9px;overflow:hidden;margin-top:10px}.fill{height:100%;background:linear-gradient(90deg,var(--red),var(--blue),var(--green));width:50%}.btn{width:100%;border:0;border-radius:16px;padding:14px;background:#173047;color:#fff;font-weight:850;font-size:15px}.status{color:var(--muted);font-size:12px;text-align:center;margin:12px}.warn{color:#ffd27a;font-size:12px;margin-top:8px;display:none}@media(max-width:600px){.wrap{padding:12px}.card{padding:16px;border-radius:20px}.price{font-size:42px}.grid{gap:6px}.h{padding:11px 5px}.hv{font-size:18px}.chart{height:390px}}
-</style></head><body><div class="wrap"><div class="head"><img class="logo" src="icon.svg"><div><div class="title">ETH ADAPTIVE TUNNEL</div><div class="sub">RADAR STATE → CAPITAL REGIME → MATHEMATICAL TRAJECTORY</div></div></div>
-<div class="card"><div class="sub">ETH/USDT · СЕЙЧАС</div><div id="price" class="price">—</div><div id="signal" class="signal">Загрузка…</div><div id="state" class="sub"></div></div>
-<div class="card"><div class="grid"><div class="h"><div class="hk">4 ЧАСА · P50</div><div id="p4" class="hv">—</div><div id="q4" class="prob">—</div></div><div class="h"><div class="hk">12 ЧАСОВ · P50</div><div id="p12" class="hv">—</div><div id="q12" class="prob">—</div></div><div class="h"><div class="hk">24 ЧАСА · P50</div><div id="p24" class="hv">—</div><div id="q24" class="prob">—</div></div></div></div>
-<div class="card"><div class="sub">ТУННЕЛЬ P20 · P50 · P80</div><div id="chart" class="chart"></div></div>
-<div class="card"><div class="rotation" id="rotation">Режим капитала: —</div><div class="bar"><div id="rotbar" class="fill"></div></div><div class="facts"><div class="fact"><div class="fk">BTC DOMINANCE</div><div id="dom" class="fv">—</div></div><div class="fact"><div class="fk">ETH/BTC</div><div id="ethbtc" class="fv">—</div></div><div class="fact"><div class="fk">BTC</div><div id="btc" class="fv">—</div></div><div class="fact"><div class="fk">OI + TAKER FLOW</div><div id="flow" class="fv">—</div></div></div><div id="warn" class="warn"></div></div>
-<button id="refresh" class="btn">↻ Обновить сейчас</button><div id="status" class="status"></div></div><script>
-const F='https://fapi.binance.com',S='https://api.binance.com',CG='https://api.coingecko.com/api/v3';const $=x=>document.getElementById(x),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),avg=a=>a.reduce((s,x)=>s+x,0)/Math.max(1,a.length);function fmt(x){return Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}async function jf(u){let r=await fetch(u,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}async function opt(u){try{return await jf(u)}catch{return null}}async function kl(s,i,n){try{return await jf(`${F}/fapi/v1/klines?symbol=${s}&interval=${i}&limit=${n}`)}catch{return jf(`${S}/api/v3/klines?symbol=${s}&interval=${i}&limit=${n}`)}}
-const closes=k=>k.map(x=>+x[4]);function ema(a,n){let q=2/(n+1),e=a[0];for(let i=1;i<a.length;i++)e=q*a[i]+(1-q)*e;return e}function rsi(a,n=14){let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];d>0?g+=d:l-=d}return l?100-100/(1+(g/n)/(l/n)):100}function atr(k,n=14){let z=[];for(let i=k.length-n;i<k.length;i++){let h=+k[i][2],l=+k[i][3],p=+k[i-1][4];z.push(Math.max(h-l,Math.abs(h-p),Math.abs(l-p)))}return avg(z)}function tf(k){let a=closes(k),e6=ema(a,6),e20=ema(a,20);return clamp((e6-e20)/(e20*.004),-1,1)}function structure(k,p){let a=k.slice(-20),hi=Math.max(...a.map(x=>+x[2])),lo=Math.min(...a.map(x=>+x[3]));return clamp(((p-lo)/(hi-lo)-.5)*2,-1,1)}function mom(k){let a=closes(k),roc=(a.at(-1)/a.at(-11)-1)/.01,rv=(rsi(a)-50)/25;return clamp(clamp(roc,-1,1)*.7+clamp(rv,-1,1)*.3,-1,1)}function taker(k,n=20){let b=0,t=0;for(let x of k.slice(-n)){b+=+x[10]||0;t+=+x[7]||0}return t?clamp(((b/t)-.5)*4,-1,1):0}function sd(a){let m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)))}function erf(x){let s=x<0?-1:1;x=Math.abs(x);let t=1/(1+.3275911*x),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return s*y}function cdf(z){return .5*(1+erf(z/Math.sqrt(2)))}
-async function dominance(){let g=await opt(`${CG}/global`);if(!g?.data?.market_cap_percentage?.btc)return null;return +g.data.market_cap_percentage.btc}
-function dominanceState(dom){if(dom==null)return {delta:null,score:0};let old=null;try{old=JSON.parse(localStorage.getItem('ethTunnelBtcDom')||'null')}catch{}let now=Date.now(),delta=null;if(old&&Number.isFinite(old.v)&&now-old.t>15*60*1000)delta=dom-old.v;try{localStorage.setItem('ethTunnelBtcDom',JSON.stringify({v:dom,t:now}))}catch{}return {delta,score:delta==null?0:clamp(-delta/.35,-1,1)}}
-function logrets(k,n){let a=closes(k).slice(-(n+1)),r=[];for(let i=1;i<a.length;i++)r.push(Math.log(a[i]/a[i-1]));return r}
-async function build(){
- /* BASE = the ordinary ETH Radar engine. Its direction logic is preserved. */
- let [m1,m5,m15,h1,h4,ethbtc,btc,oi,fund,dom]=await Promise.all([
-   kl('ETHUSDT','1m',90),kl('ETHUSDT','5m',90),kl('ETHUSDT','15m',180),kl('ETHUSDT','1h',500),kl('ETHUSDT','4h',120),
-   kl('ETHBTC','1h',96),kl('BTCUSDT','1h',96),
-   opt(`${F}/futures/data/openInterestHist?symbol=ETHUSDT&period=15m&limit=8`),
-   opt(`${F}/fapi/v1/premiumIndex?symbol=ETHUSDT`),dominance()
- ]);
- let p=+m1.at(-1)[4],A=atr(h1);
- let trend=clamp(tf(m15)*.20+tf(h1)*.35+tf(h4)*.45,-1,1),st=structure(h1,p),mo=mom(m15),f5=taker(m5),f15=taker(m15),fast=tf(m1);
- let oiPct=null,oiComp=0;
- if(oi?.length>=3){let a=+oi[0].sumOpenInterest,b=+oi.at(-1).sumOpenInterest;if(a>0){oiPct=(b/a-1)*100;let pr=closes(m15),prc=pr.at(-1)/pr[Math.max(0,pr.length-7)]-1;oiComp=prc>=0?(oiPct>=0?1:.4):(oiPct>=0?-1:-.4)}}
- let funding=fund&&Number.isFinite(+fund.lastFundingRate)?+fund.lastFundingRate*100:null;
- let fundComp=funding==null?0:clamp(-funding/.05,-1,1);
- let flow=clamp(oiComp*.45+f15*.40+fundComp*.15,-1,1);
- let hh=h1.slice(-20),hi=Math.max(...hh.map(x=>+x[2])),lo=Math.min(...hh.map(x=>+x[3]));
- let levRes=Math.min(...h1.slice(-96).map(x=>+x[2]).filter(x=>x>p),p+A*2),levSup=Math.max(...h1.slice(-96).map(x=>+x[3]).filter(x=>x<p),p-A*2);
- if(!Number.isFinite(levRes))levRes=p+A*2;if(!Number.isFinite(levSup))levSup=p-A*2;
- let distRes=(levRes-p)/A,distSup=(p-levSup)/A,liquidity=clamp((distSup-distRes)*.35,-1,1);
- let radarRaw=trend*.22+st*.22+mo*.20+flow*.20+liquidity*.16;
- let pressure=clamp(50+radarRaw*50,1,99),radarDir=pressure>=50?'LONG':'SHORT',radarConf=radarDir==='LONG'?pressure:100-pressure,radarSign=radarDir==='LONG'?1:-1;
- let a15=closes(m15),rocNow=a15.at(-1)/a15.at(-11)-1,rocPrev=a15.at(-2)/a15.at(-12)-1,decel=Math.abs(rocNow)<Math.abs(rocPrev)*.6,ext=Math.abs(p-ema(closes(h1),20))/Math.max(A,1e-9),time=decel&&ext>1.2?'LATE':(!decel&&ext<.8?'FRESH':'DEVELOPING');
-
- /* WHOLE MARKET = context for persistence, not a second LONG/SHORT engine. */
- let eb=closes(ethbtc),bb=closes(btc),er24=eb.at(-1)/eb.at(-25)-1,er4=eb.at(-1)/eb.at(-5)-1,br24=bb.at(-1)/bb.at(-25)-1,br4=bb.at(-1)/bb.at(-5)-1,ds=dominanceState(dom);
- let relState=clamp(.6*(er24/.03)+.4*(er4/.015),-1,1);
- let btcState=clamp(.6*(br24/.06)+.4*(br4/.03),-1,1);
- /* BTC.D is confirmation only when we actually have a stored change. Falling dominance confirms ETH relative strength; rising dominance confirms ETH relative weakness. */
- let domState=ds.delta==null?0:clamp(-ds.delta/.50,-1,1);
- let rotation=clamp(.70*relState+.20*domState+.10*(Math.sign(relState)===Math.sign(btcState)?btcState:0),-1,1);
- let contextAgree=clamp(radarSign*rotation,-1,1);
-
- /* MATHEMATICAL TRAJECTORY.
-    1) Anchor = exact live ETH price.
-    2) Initial velocity comes only from observed ETH returns, projected onto the radar direction.
-    3) Radar strength sets how much of that observed impulse is considered persistent, not a made-up USD target.
-    4) Persistence decays exponentially; market rotation/flow alter half-life, not direction.
-    5) P20/P50/P80 are quantiles of the same log-price distribution for each horizon. */
- let r15=logrets(m15,80),r1=logrets(h1,160);
- let v15=avg(r15.slice(-12))*4;                 // observed log-return/hour from last 3h
- let v1=avg(r1.slice(-8));                     // observed log-return/hour from last 8h
- let observedV=.60*v15+.40*v1;
- let observedAlong=radarSign*Math.max(0,radarSign*observedV);
- let atrHourly=(A/p)/Math.sqrt(14);             // volatility scale, not target
- let signalFloor=Math.abs(radarRaw)*atrHourly*.35;
- let v0=radarSign*Math.max(observedAlong,signalFloor);
- let ageHalf=time==='FRESH'?12:time==='DEVELOPING'?7:3.5;
- let flowAgree=clamp(radarSign*flow,-1,1);
- let halfLife=ageHalf*Math.exp(.28*contextAgree+.20*flowAgree); // continuation quality changes persistence only
- let tau=halfLife/Math.log(2);
- let sigma1=Math.max(sd(r1.slice(-96)),(A/p)/3.2);
- let H=[4,12,24],targets={},bands={},probs={};
- for(let h of H){
-   let meanLog=v0*tau*(1-Math.exp(-h/tau));
-   /* Uncertainty grows with horizon and widens when market context opposes the radar. */
-   let contextPenalty=1+.18*Math.max(0,-contextAgree)+.12*Math.max(0,-flowAgree);
-   let vol=sigma1*Math.sqrt(h)*contextPenalty;
-   let med=p*Math.exp(meanLog),z=.841621233;
-   targets[h]=med;
-   bands[h]={p20:med*Math.exp(-z*vol),p50:med,p80:med*Math.exp(z*vol)};
-   let up=cdf(meanLog/Math.max(vol,1e-9));
-   probs[h]=radarDir==='LONG'?up:1-up;
- }
- let capital=rotation,dir=radarDir,conf=radarConf;
- return {p,A,dir,conf,time,trend,st,mo,flow,fast,oiPct,funding,dom,domDelta:ds.delta,er:er24,er4,br:br24,br4,capital,radarRaw,marketRaw:radarRaw,targets,bands,probs,h1};
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1018"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon.svg"><title>ETH Adaptive Tunnel</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#0b1018;color:#eef4ff;font:15px system-ui,-apple-system,sans-serif}.wrap{max-width:820px;margin:auto;padding:14px}.top{display:flex;justify-content:space-between;align-items:center}.muted{color:#8f9bad}.price{font-size:36px;font-weight:800}.sig{font-size:24px;font-weight:800}.long{color:#32dc91}.short{color:#ff6572}.card{background:#121a27;border:1px solid #263247;border-radius:16px;padding:14px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.h{background:#0d1420;border-radius:12px;padding:11px}.h b{font-size:19px}.small{font-size:12px;color:#9aa7ba}.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.fact{background:#0d1420;border-radius:10px;padding:10px}.fact b{display:block;margin-top:4px}canvas{width:100%;height:330px;background:#0d1420;border-radius:12px}button{background:#1c2940;color:white;border:0;border-radius:10px;padding:10px 14px;font-weight:700}.warn{color:#ffc966;margin-top:8px}@media(max-width:560px){.grid{grid-template-columns:1fr}.price{font-size:32px}canvas{height:300px}}</style></head><body><div class="wrap"><div class="top"><div><div class="small">ETH / USDT · ADAPTIVE PROBABILITY TUNNEL</div><div id="price" class="price">—</div></div><button onclick="load()">↻ Обновить</button></div><div id="signal" class="sig">Считаю…</div><div id="state" class="muted"></div>
+<div class="card"><canvas id="chart"></canvas></div>
+<div class="card"><div class="grid"><div class="h"><div class="small">4 ЧАСА · P50</div><b id="p4">—</b><div id="q4" class="small"></div></div><div class="h"><div class="small">12 ЧАСОВ · P50</div><b id="p12">—</b><div id="q12" class="small"></div></div><div class="h"><div class="small">24 ЧАСА · P50</div><b id="p24">—</b><div id="q24" class="small"></div></div></div></div>
+<div class="card"><div class="facts"><div class="fact"><span class="small">BTC DOMINANCE</span><b id="dom">—</b></div><div class="fact"><span class="small">ETH/BTC</span><b id="ethbtc">—</b></div><div class="fact"><span class="small">BTC</span><b id="btc">—</b></div><div class="fact"><span class="small">OI + TAKER FLOW</span><b id="flow">—</b></div></div><div id="rotation" style="margin-top:10px"></div><div id="warn" class="warn"></div></div><div id="status" class="small"></div></div>
+<script>
+const F='https://fapi.binance.com',S='https://api.binance.com',CG='https://api.coingecko.com/api/v3';
+const $=x=>document.getElementById(x),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+const fmt=x=>Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function jf(u){let r=await fetch(u,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()} async function opt(u){try{return await jf(u)}catch{return null}}
+async function kl(sym,int,n){try{return await jf(`${F}/fapi/v1/klines?symbol=${sym}&interval=${int}&limit=${n}`)}catch{return jf(`${S}/api/v3/klines?symbol=${sym}&interval=${int}&limit=${n}`)}}
+const closes=k=>k.map(x=>+x[4]); function ema(a,n){let q=2/(n+1),e=a[0];for(let i=1;i<a.length;i++)e=q*a[i]+(1-q)*e;return e} function atr(k,n=14){let z=[];for(let i=k.length-n;i<k.length;i++){let h=+k[i][2],l=+k[i][3],p=+k[i-1][4];z.push(Math.max(h-l,Math.abs(h-p),Math.abs(l-p)))}return avg(z)}
+function sd(a){let m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)))} function logrets(a){let r=[];for(let i=1;i<a.length;i++)r.push(Math.log(a[i]/a[i-1]));return r}
+function bias(k){let a=closes(k),e6=ema(a,6),e20=ema(a,20);return clamp((e6-e20)/(e20*.004),-1,1)}
+function rsi(a,n=14){let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];d>0?g+=d:l-=d}return l?100-100/(1+(g/n)/(l/n)):100}
+function momentum(k){let a=closes(k),roc=(a.at(-1)/a.at(-11)-1)/.01,rv=(rsi(a)-50)/25;return clamp(clamp(roc,-1,1)*.7+clamp(rv,-1,1)*.3,-1,1)}
+function taker(k,n=20){let b=0,t=0;for(let x of k.slice(-n)){b+=+x[10]||0;t+=+x[7]||0}return t?clamp(((b/t)-.5)*4,-1,1):0}
+function closed(k){let now=Date.now();return k.filter(x=>+x[6]<now)}
+async function domNow(){let g=await opt(`${CG}/global`);return g?.data?.market_cap_percentage?.btc?+g.data.market_cap_percentage.btc:null}
+function domState(v,anchorTime){if(v==null)return {d:null,s:0};let key='ETH_TUNNEL_DOM_V3',old=null;try{old=JSON.parse(localStorage.getItem(key)||'null')}catch{};let d=null;if(old&&old.bucket!==anchorTime)d=v-old.v;try{if(!old||old.bucket!==anchorTime)localStorage.setItem(key,JSON.stringify({v,bucket:anchorTime}))}catch{}return {d,s:d==null?0:clamp(-d/.35,-1,1)}}
+function phi(x){let t=1/(1+.2316419*Math.abs(x)),d=.3989423*Math.exp(-x*x/2),p=1-d*t*(.319381530+t*(-.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));return x>=0?p:1-p}
+function integrate(a,tau,h){return a*tau*(1-Math.exp(-h/tau))}
+async function compute(){
+ let [m1,m5,m15,h1,h4,btc,eb,oi,fund,dom]=await Promise.all([kl('ETHUSDT','1m',90),kl('ETHUSDT','5m',120),kl('ETHUSDT','15m',220),kl('ETHUSDT','1h',520),kl('ETHUSDT','4h',160),kl('BTCUSDT','1h',80),kl('ETHBTC','1h',80),opt(`${F}/futures/data/openInterestHist?symbol=ETHUSDT&period=15m&limit=16`),opt(`${F}/fapi/v1/premiumIndex?symbol=ETHUSDT`),domNow()]);
+ // Forecast state is anchored to the last CLOSED 15m candle. A one-second page refresh cannot drag 4/12/24h targets with spot.
+ let c15=closed(m15),c1=closed(h1),c4=closed(h4),anchor=+c15.at(-1)[4],anchorTime=+c15.at(-1)[6],live=+m1.at(-1)[4],A=atr(c1),vol1=sd(logrets(closes(c1).slice(-169)));
+ // Original ETH Radar state, evaluated on closed data.
+ let trend=clamp(bias(c15)*.20+bias(c1)*.35+bias(c4)*.45,-1,1),mom=momentum(c15),f5=taker(closed(m5)),f15=taker(c15),fast=bias(closed(m1));
+ let oiPct=null,oiComp=0;if(Array.isArray(oi)&&oi.length>3){let a=+oi[0].sumOpenInterest,b=+oi.at(-1).sumOpenInterest;if(a>0){oiPct=(b/a-1)*100;let pr=closes(c15),prc=pr.at(-1)/pr.at(-7)-1;oiComp=prc>=0?(oiPct>=0?1:.4):(oiPct>=0?-1:-.4)}}
+ let funding=fund&&isFinite(+fund.lastFundingRate)?+fund.lastFundingRate*100:null,fc=funding==null?0:clamp(-funding/.05,-1,1),flow=clamp(oiComp*.45+f15*.40+fc*.15,-1,1);
+ // Capital regime: relative strength + BTC direction + BTC.D change. BTC.D never becomes a direct dollar target.
+ let bc=closes(closed(btc)),ec=closes(closed(eb)),er4=ec.at(-1)/ec.at(-5)-1,er24=ec.at(-1)/ec.at(-25)-1,br4=bc.at(-1)/bc.at(-5)-1,br24=bc.at(-1)/bc.at(-25)-1,ds=domState(dom,anchorTime);
+ let rel=clamp(er4/.012*.45+er24/.03*.55,-1,1),btcReg=clamp(br4/.025*.45+br24/.06*.55,-1,1);let capital=clamp(rel*.55+btcReg*.20+ds.s*.25,-1,1);
+ // Impulse age from the radar: it changes persistence, never forces direction.
+ let a15=closes(c15),rn=a15.at(-1)/a15.at(-11)-1,rp=a15.at(-2)/a15.at(-12)-1,ext=Math.abs(anchor-ema(closes(c1),20))/Math.max(A,1e-9),decel=Math.abs(rn)<Math.abs(rp)*.6,time=decel&&ext>1.2?'LATE':(!decel&&ext<.8?'FRESH':'DEVELOPING'),life=time==='FRESH'?1:time==='LATE'?.48:.74;
+ // Mathematical trajectory = superposition of observed short/medium/market components with DIFFERENT decay times.
+ // This allows acceleration, flattening and even a turn; there is no target = livePrice + fixedOffset formula.
+ let r15=logrets(a15),r1=logrets(closes(c1));let vShort=avg(r15.slice(-4))*4, vMid=avg(r1.slice(-4)); // log-return per hour
+ let radar=clamp(trend*.32+mom*.28+flow*.25+fast*.15,-1,1);
+ let scale=Math.max(vol1,.0015);let aShort=clamp(vShort,-2.2*scale,2.2*scale)*life;
+ let aMid=clamp(vMid,-1.6*scale,1.6*scale)*(.55+.45*life);
+ let aState=scale*(radar*.34+capital*.24+flow*.18); // state contribution per hour, bounded by observed vol
+ let tauS=time==='FRESH'?3.2:time==='LATE'?1.2:2.2,tauM=time==='FRESH'?8:time==='LATE'?4.5:6.2,tauR=14;
+ let targets={},bands={},probs={};for(let h of [4,12,24]){let mu=integrate(aShort,tauS,h)+integrate(aMid,tauM,h)+integrate(aState,tauR,h);let p50=anchor*Math.exp(mu);let sig=vol1*Math.sqrt(h)*Math.sqrt(1+h/36);let z=.841621;bands[h]={p20:anchor*Math.exp(mu-z*sig),p80:anchor*Math.exp(mu+z*sig)};targets[h]=p50;probs[h]=phi(mu/sig)}
+ let dir=radar>=0?'LONG':'SHORT',conf=50+Math.abs(radar)*45;return {live,anchor,anchorTime,A,dir,conf,time,targets,bands,probs,dom,dd:ds.d,er24,br24,oiPct,flow,capital,hist:c1,vol1,radar};
 }
-let chart;function draw(s){$('chart').innerHTML='';chart=LightweightCharts.createChart($('chart'),{width:$('chart').clientWidth,height:$('chart').clientHeight,layout:{background:{color:'#0e1b28'},textColor:'#8fa6b8'},grid:{vertLines:{color:'#152838'},horzLines:{color:'#152838'}},timeScale:{timeVisible:true}});let hist=chart.addLineSeries({lineWidth:2});hist.setData(s.h1.slice(-72).map(x=>({time:Math.floor(+x[0]/1000),value:+x[4]})));let now=Math.floor(Date.now()/1000),step=4*3600;let p50=chart.addLineSeries({lineWidth:3,lineStyle:0}),p20=chart.addLineSeries({lineWidth:1,lineStyle:2}),p80=chart.addLineSeries({lineWidth:1,lineStyle:2});let base={time:now,value:s.p};p50.setData([base,...[4,12,24].map(h=>({time:now+h*3600,value:s.bands[h].p50}))]);p20.setData([base,...[4,12,24].map(h=>({time:now+h*3600,value:s.bands[h].p20}))]);p80.setData([base,...[4,12,24].map(h=>({time:now+h*3600,value:s.bands[h].p80}))]);chart.timeScale().fitContent()}
-function render(s){$('price').textContent=fmt(s.p);$('signal').className='signal '+(s.dir==='LONG'?'long':'short');$('signal').textContent=`${s.dir==='LONG'?'🟢':'🔴'} ${s.dir} · ${s.conf.toFixed(1)}%`;$('state').textContent=`${s.time} · ETH RADAR + рынок → математическая траектория`;for(let h of [4,12,24]){$('p'+h).textContent=fmt(s.targets[h]);$('q'+h).textContent=`${s.dir} ${(s.probs[h]*100).toFixed(1)}% · P20 ${fmt(s.bands[h].p20)} · P80 ${fmt(s.bands[h].p80)}`}$('dom').textContent=s.dom==null?'нет данных':s.dom.toFixed(2)+'%'+(s.domDelta==null?'':` · ${s.domDelta>=0?'↑':'↓'} ${Math.abs(s.domDelta).toFixed(2)} п.п.`);$('ethbtc').textContent=(s.er>=0?'↑ ':'↓ ')+(s.er*100).toFixed(2)+'% / 24ч';$('btc').textContent=(s.br>=0?'↑ ':'↓ ')+(s.br*100).toFixed(2)+'% / 24ч';$('flow').textContent=`FLOW ${s.flow>=0?'+':''}${s.flow.toFixed(2)} · OI ${s.oiPct==null?'—':(s.oiPct>=0?'+':'')+s.oiPct.toFixed(2)+'%'}`;let txt=s.capital>.18?'ротация/рынок поддерживают ETH':s.capital<-.18?'режим капитала давит на ETH':'нейтральный';$('rotation').textContent='Режим капитала: '+txt;$('rotbar').style.width=(50+s.capital*45)+'%';let w=[];if(s.dom==null)w.push('BTC.D недоступна');$('warn').style.display=w.length?'block':'none';$('warn').textContent=w.length?'⚠️ '+w.join(' · '):'';draw(s);$('status').textContent='Обновлено '+new Date().toLocaleTimeString()}
-async function load(){let b=$('refresh');b.disabled=true;b.textContent='↻ Считаю…';try{render(await build())}catch(e){$('status').textContent='Ошибка данных: '+e.message}finally{b.disabled=false;b.textContent='↻ Обновить сейчас'}}$('refresh').onclick=load;addEventListener('resize',()=>{});load();
+function draw(s){let cv=$('chart'),dpr=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;let x=cv.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);let hist=closes(s.hist).slice(-48),future=[s.anchor,s.targets[4],s.targets[12],s.targets[24]],all=hist.concat(Object.values(s.bands).flatMap(v=>[v.p20,v.p80]),future),mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*.12||1,mny=mn-pad,mxy=mx+pad,Y=p=>h-(p-mny)/(mxy-mny)*h,X=i=>i/(hist.length+3)*(w-8)+4;x.lineWidth=2;x.strokeStyle='#8795aa';x.beginPath();hist.forEach((p,i)=>i?x.lineTo(X(i),Y(p)):x.moveTo(X(i),Y(p)));x.stroke();let x0=X(hist.length-1),xs=[x0,X(hist.length),X(hist.length+1),X(hist.length+2)],hs=[0,4,12,24];for(let key of ['p20','p80']){x.strokeStyle='#477cff';x.lineWidth=1.5;x.beginPath();x.moveTo(x0,Y(s.anchor));[4,12,24].forEach((hh,i)=>x.lineTo(xs[i+1],Y(s.bands[hh][key])));x.stroke()}x.strokeStyle='#32dc91';x.lineWidth=3;x.beginPath();x.moveTo(x0,Y(s.anchor));[4,12,24].forEach((hh,i)=>x.lineTo(xs[i+1],Y(s.targets[hh])));x.stroke();x.fillStyle='#dce7fa';x.font='12px system-ui';x.fillText('ANCHOR '+fmt(s.anchor),Math.max(4,x0-100),Math.max(14,Y(s.anchor)-8));}
+function render(s){$('price').textContent=fmt(s.live);$('signal').className='sig '+(s.dir==='LONG'?'long':'short');$('signal').textContent=`${s.dir==='LONG'?'🟢':'🔴'} ETH RADAR ${s.dir} · ${s.conf.toFixed(1)}%`;$('state').textContent=`Траектория зафиксирована от закрытой 15m свечи ${new Date(s.anchorTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} · ${s.time}`;for(let h of [4,12,24]){$('p'+h).textContent=fmt(s.targets[h]);let up=s.probs[h],p=s.targets[h]>=s.anchor?up:1-up;$('q'+h).textContent=`${s.targets[h]>=s.anchor?'LONG':'SHORT'} ${(p*100).toFixed(1)}% · P20 ${fmt(s.bands[h].p20)} · P80 ${fmt(s.bands[h].p80)}`}$('dom').textContent=s.dom==null?'нет данных':s.dom.toFixed(2)+'%'+(s.dd==null?'':` · Δ ${s.dd>=0?'+':''}${s.dd.toFixed(2)} п.п.`);$('ethbtc').textContent=(s.er24>=0?'↑ ':'↓ ')+(s.er24*100).toFixed(2)+'% / 24ч';$('btc').textContent=(s.br24>=0?'↑ ':'↓ ')+(s.br24*100).toFixed(2)+'% / 24ч';$('flow').textContent=`FLOW ${s.flow>=0?'+':''}${s.flow.toFixed(2)} · OI ${s.oiPct==null?'—':(s.oiPct>=0?'+':'')+s.oiPct.toFixed(2)+'%'}`;$('rotation').textContent='Режим капитала: '+(s.capital>.18?'поддерживает ETH':s.capital<-.18?'давит на ETH':'нейтральный');$('warn').textContent=s.dom==null?'⚠️ BTC.D недоступна — расчёт без неё, без подстановки выдуманного значения.':'';draw(s);$('status').textContent='Live '+new Date().toLocaleTimeString()+' · прогноз меняется при изменении закрытых рыночных данных, а не от секундного тика.'}
+async function load(){try{$('status').textContent='Получаю рынок…';render(await compute())}catch(e){$('status').textContent='Ошибка данных: '+e.message;console.error(e)}}window.addEventListener('resize',()=>window._s&&draw(window._s));load();
 </script></body></html>
