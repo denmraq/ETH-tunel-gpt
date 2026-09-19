@@ -12,3 +12,6 @@ Static GitHub Pages build. Upload the files directly to the publishing folder (r
 - P20/P50/P80 and 4h/12h/24h probabilities are samples of ONE continuous 0→24h conditional distribution.
 
 No RSI/MACD/extra indicator stack was added to the trajectory engine. The existing ETH Radar remains a separate current-state signal.
+
+## ONE MATH signal
+The headline ETH TUNNEL LONG/SHORT signal is derived from the same continuous 0–24h probability distribution used for the chart and the 4h/12h/24h cards. There is no separate competing Radar headline signal. The internal radar state remains only one market-state input to the mathematical trajectory.
