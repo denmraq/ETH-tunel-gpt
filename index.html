@@ -49,7 +49,7 @@ async function compute(){
  let path=[];for(let h=0;h<=24;h++){let mu=h===0?0:integrate(aFast,4.8,h)+integrate(aSlow,12,h)+integrate(aRel,14,h)+integrate(aLong,36,h);let sig=h===0?0:vol1*Math.sqrt(h)*Math.sqrt(1+h/40)*Math.sqrt(volRatio);path.push({h,mu,sig,p50:anchor*Math.exp(mu),up:h===0?.5:phi(mu/Math.max(sig,1e-9))})}
  // Estimated Binance liquidation magnets. Build weighted entry-price bins from recent futures candles,
  // project common leverage liquidation distances, and weight by volume/OI/taker context. This is an estimate, not exchange position data.
- let src=closed(m5).slice(-288);if(src.length<200)throw Error('LIQ DATA ERROR'),lo=Math.min(...src.map(x=>+x[3])),hi=Math.max(...src.map(x=>+x[2])),bin=Math.max(A*.16,anchor*.0015),bins=new Map();
+ let src=closed(m5).slice(-288);if(src.length<200)throw Error('LIQ DATA ERROR');let lo=Math.min(...src.map(x=>+x[3])),hi=Math.max(...src.map(x=>+x[2])),bin=Math.max(A*.16,anchor*.0015),bins=new Map();
  for(let x of src){let p=(+x[2]+ +x[3]+ +x[4])/3,v=+x[7]||0,k=Math.round(p/bin)*bin;bins.set(k,(bins.get(k)||0)+v)}
  let levels=[];for(let [entry,v] of bins){for(let lev of [10,20,50]){let buffer=lev===10?.092:lev===20?.046:.018;let w=v*(lev===20?1:lev===10?.65:.55)*(1+.18*oiConfirm);levels.push({p:entry*(1+buffer),side:'UP',w});levels.push({p:entry*(1-buffer),side:'DOWN',w})}}
  function cluster(side){let arr=levels.filter(q=>side==='UP'?q.p>live:q.p<live),cm=new Map();for(let q of arr){let k=Math.round(q.p/bin)*bin;cm.set(k,(cm.get(k)||0)+q.w)}let a=[...cm].map(([p,w])=>({p:+p,w}));a.sort((x,y)=>side==='UP'?x.p-y.p:y.p-x.p);let max=Math.max(...a.map(x=>x.w),1),strong=a.filter(x=>x.w>=max*.18);let hit=strong[0]||a[0];if(!hit)throw Error('LIQ DATA ERROR');return hit}
