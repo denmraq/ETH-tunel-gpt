@@ -1,17 +1,17 @@
-# ETH Adaptive Probability Tunnel
-Static GitHub Pages build. Upload the files directly to the publishing folder (root or docs). No Python/backend.
+# ETH Adaptive Tunnel — Binance Liquidation Magnet Concept
 
-## Mathematical core
-- Forecast anchor: last CLOSED 15m ETH candle; LIVE price is display-only and cannot drag the trajectory.
-- ETH price dynamics: short/medium log-return velocity plus acceleration.
-- Slow ETH regime: 50D/200D distances and slopes, normalized by realized daily volatility.
-- Local standardized displacement (Z): large extensions reduce persistence; it does not mechanically reverse the forecast.
-- BTC.D + ETH/BTC + BTC: capital/relative-strength context, never a direct dollar target.
-- OI + taker flow + funding: derivatives confirmation inside the radar state; flow is not counted a second time in the trajectory state.
-- Adaptive volatility: recent vs previous realized volatility changes P20/P80 expansion.
-- P20/P50/P80 and 4h/12h/24h probabilities are samples of ONE continuous 0→24h conditional distribution.
+Static GitHub Pages build. No server and no API keys.
 
-No RSI/MACD/extra indicator stack was added to the trajectory engine. The existing ETH Radar remains a separate current-state signal.
+## Core
+- Binance ETHUSDT futures is the primary market source.
+- 15m is used only as the closed-candle ANCHOR, not as the direction motor.
+- P50 is one continuous 0–24h mathematical path based on smoothed ETH log-price regression slopes (6h and 13h), acceleration, 50D/200D regime and conditional ETH/BTC relative strength.
+- 50D/200D are drawn as thin regime lines and affect P50 only when the slow geometry is materially aligned/displaced.
+- ETH/BTC is ignored during ordinary noise and affects P50 only when 4h and 24h relative moves agree and exceed thresholds.
+- BTC Dominance is removed.
+- OI/taker flow/funding confirm persistence; they do not independently choose LONG/SHORT.
 
-## ONE MATH signal
-The headline ETH TUNNEL LONG/SHORT signal is derived from the same continuous 0–24h probability distribution used for the chart and the 4h/12h/24h cards. There is no separate competing Radar headline signal. The internal radar state remains only one market-state input to the mathematical trajectory.
+## Liquidation-magnet corridor
+The blue boundaries are NOT CoinGlass and NOT actual Binance user liquidation positions. They are estimated potential liquidation clusters derived in-browser from recent Binance Futures price/quote-volume distribution, public OI/taker context and typical leverage-distance assumptions (10x/20x/50x). When P50 consumes a cluster, the boundary selects the next significant estimated cluster.
+
+This is an experimental probabilistic market model, not investment advice.
